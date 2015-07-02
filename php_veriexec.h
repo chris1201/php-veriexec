@@ -21,10 +21,17 @@
 #ifndef PHP_VERIEXEC_H
 #define PHP_VERIEXEC_H
 
-extern zend_module_entry veriexec_module_entry;
-#define phpext_veriexec_ptr &veriexec_module_entry
-
 #define PHP_VERIEXEC_VERSION "0.1.0" 
+
+#ifndef ZEND_EXT_API
+# if WIN32|WINNT
+#  define ZEND_EXT_API __declspec(dllexport)
+# elif defined(__GNUC__) && __GNUC__ >= 4
+#  define ZEND_EXT_API __attribute__ ((visibility("default")))
+# else
+#  define ZEND_EXT_API
+# endif
+#endif
 
 #ifdef PHP_WIN32
 #	define PHP_VERIEXEC_API __declspec(dllexport)
