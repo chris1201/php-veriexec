@@ -190,15 +190,9 @@ PHP_MINIT_FUNCTION(veriexec)
 
 	REGISTER_INI_ENTRIES();
 
-zend_printf("init %s %d\n", INI_STR("zend.veriexec_file"), INI_INT("zend.veriexec_mode"));
-
 	ht = &VERIEXEC_G(zend_veriexec_table);
 	VERIEXEC_G(zend_veriexec_file) = INI_STR("zend.veriexec_file");
 	VERIEXEC_G(zend_veriexec_mode) = INI_INT("zend.veriexec_mode");
-
-zend_printf("%s - %d\n", INI_STR("zend.veriexec_file"), INI_INT("zend.veriexec_mode"));
-
-zend_printf("%s - %d\n", VERIEXEC_G(zend_veriexec_file), VERIEXEC_G(zend_veriexec_mode));
 
    	zend_hash_init(ht, 32, NULL, NULL, 0);
         _sigexec_fp = fopen(VERIEXEC_G(zend_veriexec_file), "r+");
@@ -246,6 +240,18 @@ const zend_function_entry veriexec_functions[] = {
 
 
 ZEND_API zend_op_array *veriexec_compile_file(zend_file_handle *file_handle, int type TSRMLS_DC) {
+
+
+        if (open_file_for_scanning(file_handle TSRMLS_CC)==FAILURE) {
+                if (type==ZEND_REQUIRE) {
+                        zend_message_dispatcher(ZMSG_FAILED_REQUIRE_FOPEN, file_handle->filename TSRMLS_CC);
+                        zend_bailout();
+                } else {
+                        zend_message_dispatcher(ZMSG_FAILED_INCLUDE_FOPEN, file_handle->filename TSRMLS_CC);
+                }
+
+		return NULL;
+	}
 
         if (!zend_veriexec_verify(file_handle->handle.stream.mmap.buf, strlen(file_handle->handle.stream.mmap.buf))) {
                 // Allow script to continue
@@ -301,7 +307,6 @@ static int veriexec_startup(zend_extension *extension)
 
 	return zend_startup_module(&veriexec_module_entry);
 
-	return SUCCESS;
 }
 /* }}} */
 
